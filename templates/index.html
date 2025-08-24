@@ -1,0 +1,446 @@
+{% extends "base.html" %}
+
+{% block title %}Scraping - Google Maps Scraper{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="text-center">
+                <h1 class="display-4 fw-bold mb-3">
+                    <i class="fas fa-map-marked-alt text-primary me-3"></i>
+                    Google Maps Scraper
+                </h1>
+                <p class="lead text-muted">
+                    Extract business information from Google Maps with advanced email extraction capabilities
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row mb-5">
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <div class="feature-icon mx-auto">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <h5 class="card-title">Smart Scraping</h5>
+                    <p class="card-text">Automatically extract business names, ratings, addresses, and contact information</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <div class="feature-icon mx-auto">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <h5 class="card-title">Email Extraction</h5>
+                    <p class="card-text">Find business email addresses using AI-powered search methods</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <div class="feature-icon mx-auto">
+                        <i class="fas fa-download"></i>
+                    </div>
+                    <h5 class="card-title">Multiple Formats</h5>
+                    <p class="card-text">Export data in CSV or JSON format for easy integration</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <div class="feature-icon mx-auto">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h5 class="card-title">High Performance</h5>
+                    <p class="card-text">Fast and efficient scraping with configurable browser options</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scraping Form -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-cogs me-2"></i>
+                        Scraping Configuration
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form id="scrapingForm">
+                        <!-- Search Query -->
+                        <div class="mb-3">
+                            <label for="searchQuery" class="form-label fw-bold">
+                                <i class="fas fa-search me-2"></i>
+                                Search Query
+                            </label>
+                            <input type="text" class="form-control" id="searchQuery" 
+                                   placeholder="e.g., restaurants in New York" required>
+                            <div class="form-text">Enter the business type and location you want to search for</div>
+                        </div>
+
+                        <!-- Browser Configuration -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="browserType" class="form-label fw-bold">
+                                    <i class="fas fa-globe me-2"></i>
+                                    Browser Type
+                                </label>
+                                <select class="form-select" id="browserType">
+                                    <option value="firefox">Firefox</option>
+                                    <option value="chrome">Chrome</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="headlessMode" class="form-label fw-bold">
+                                    <i class="fas fa-eye me-2"></i>
+                                    Browser Mode
+                                </label>
+                                <select class="form-select" id="headlessMode">
+                                    <option value="false">Visible Mode</option>
+                                    <option value="true">Headless Mode</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Results Configuration -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="maxResults" class="form-label fw-bold">
+                                    <i class="fas fa-list-ol me-2"></i>
+                                    Maximum Results
+                                </label>
+                                <input type="number" class="form-control" id="maxResults" 
+                                       value="50" min="1" max="200">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="storageFormat" class="form-label fw-bold">
+                                    <i class="fas fa-file me-2"></i>
+                                    Storage Format
+                                </label>
+                                <select class="form-select" id="storageFormat">
+                                    <option value="csv">CSV</option>
+                                    <option value="json">JSON</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Email Extraction -->
+                        <div class="mb-3">
+                            <label for="emailExtraction" class="form-label fw-bold">
+                                <i class="fas fa-envelope me-2"></i>
+                                Email Extraction Method
+                            </label>
+                            <select class="form-select" id="emailExtraction">
+                                <option value="skip">Skip Email Extraction</option>
+                                <option value="api">Perplexity API (Paid)</option>
+                                <option value="free">Microsoft Copilot (Free)</option>
+                            </select>
+                        </div>
+
+                        <!-- API Key (conditional) -->
+                        <div class="mb-3" id="apiKeySection" style="display: none;">
+                            <label for="perplexityApiKey" class="form-label fw-bold">
+                                <i class="fas fa-key me-2"></i>
+                                Perplexity API Key
+                            </label>
+                            <input type="password" class="form-control" id="perplexityApiKey" 
+                                   placeholder="Enter your Perplexity API key">
+                            <div class="form-text">
+                                <a href="https://www.perplexity.ai/" target="_blank" class="text-decoration-none">
+                                    Get your API key from Perplexity AI
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg" id="startScrapingBtn">
+                                <i class="fas fa-play me-2"></i>
+                                Start Scraping
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Section -->
+    <div class="row mt-4" id="progressSection" style="display: none;">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Scraping Progress
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold">Progress</span>
+                            <span id="progressText">0%</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">Status:</span>
+                            <span id="statusMessage" class="status-badge status-running">
+                                <i class="fas fa-spinner fa-spin me-1"></i>
+                                Initializing...
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="text-center">
+                                <h6 class="text-muted">Total Found</h6>
+                                <h4 id="totalFound" class="text-primary">0</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="text-center">
+                                <h6 class="text-muted">Scraped</h6>
+                                <h4 id="scrapedCount" class="text-success">0</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="row mt-4" id="resultsSection" style="display: none;">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-check-circle me-2"></i>
+                        Scraping Completed
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <span id="completionMessage"></span>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <button class="btn btn-outline-primary" id="downloadResultsBtn">
+                            <i class="fas fa-download me-2"></i>
+                            Download Results
+                        </button>
+                        <a href="/email" class="btn btn-success">
+                            <i class="fas fa-envelope me-2"></i>
+                            Go to Cold Email
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('scrapingForm');
+    const emailExtraction = document.getElementById('emailExtraction');
+    const apiKeySection = document.getElementById('apiKeySection');
+    const progressSection = document.getElementById('progressSection');
+    const resultsSection = document.getElementById('resultsSection');
+    const startBtn = document.getElementById('startScrapingBtn');
+    
+    let statusInterval;
+    let currentFilename = '';
+
+    // Show/hide API key section based on email extraction method
+    emailExtraction.addEventListener('change', function() {
+        if (this.value === 'api') {
+            apiKeySection.style.display = 'block';
+        } else {
+            apiKeySection.style.display = 'none';
+        }
+    });
+
+    // Handle form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            search_query: document.getElementById('searchQuery').value,
+            browser_type: document.getElementById('browserType').value,
+            headless_mode: document.getElementById('headlessMode').value === 'true',
+            storage_format: document.getElementById('storageFormat').value,
+            email_extraction: document.getElementById('emailExtraction').value,
+            perplexity_api_key: document.getElementById('perplexityApiKey').value,
+            max_results: parseInt(document.getElementById('maxResults').value)
+        };
+
+        // Validate form
+        if (!formData.search_query.trim()) {
+            showAlert('Please enter a search query', 'danger');
+            return;
+        }
+
+        if (formData.email_extraction === 'api' && !formData.perplexity_api_key.trim()) {
+            showAlert('Please enter your Perplexity API key', 'danger');
+            return;
+        }
+
+        // Start scraping
+        startScraping(formData);
+    });
+
+    function startScraping(data) {
+        // Update UI
+        startBtn.disabled = true;
+        startBtn.innerHTML = '<span class="loading-spinner me-2"></span>Starting...';
+        progressSection.style.display = 'block';
+        resultsSection.style.display = 'none';
+        
+        // Reset progress
+        document.getElementById('progressBar').style.width = '0%';
+        document.getElementById('progressText').textContent = '0%';
+        document.getElementById('statusMessage').innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Starting...';
+        document.getElementById('totalFound').textContent = '0';
+        document.getElementById('scrapedCount').textContent = '0';
+
+        // Send request
+        fetch('/api/start-scraping', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showAlert(data.error, 'danger');
+                resetUI();
+            } else {
+                // Start polling for status
+                startStatusPolling();
+            }
+        })
+        .catch(error => {
+            showAlert('Error starting scraping: ' + error.message, 'danger');
+            resetUI();
+        });
+    }
+
+    function startStatusPolling() {
+        statusInterval = setInterval(checkStatus, 2000);
+    }
+
+    function checkStatus() {
+        fetch('/api/scraping-status')
+        .then(response => response.json())
+        .then(data => {
+            updateProgress(data);
+            
+            if (!data.is_running) {
+                clearInterval(statusInterval);
+                if (data.message.includes('completed') || data.message.includes('saved')) {
+                    showResults(data);
+                } else {
+                    showAlert(data.message, 'danger');
+                }
+                resetUI();
+            }
+        })
+        .catch(error => {
+            console.error('Error checking status:', error);
+        });
+    }
+
+    function updateProgress(data) {
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        const statusMessage = document.getElementById('statusMessage');
+        const totalFound = document.getElementById('totalFound');
+        const scrapedCount = document.getElementById('scrapedCount');
+
+        // Update progress bar
+        const progress = data.progress || 0;
+        progressBar.style.width = progress + '%';
+        progressText.textContent = progress + '%';
+
+        // Update status
+        statusMessage.innerHTML = data.message;
+        
+        // Update counts
+        totalFound.textContent = data.total_found || 0;
+        scrapedCount.textContent = data.scraped_count || 0;
+
+        // Update status badge
+        if (data.is_running) {
+            statusMessage.className = 'status-badge status-running';
+            statusMessage.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>' + data.message;
+        }
+    }
+
+    function showResults(data) {
+        resultsSection.style.display = 'block';
+        document.getElementById('completionMessage').textContent = data.message;
+        
+        // Extract filename from message
+        const filenameMatch = data.message.match(/saved.*results to (.+)/);
+        if (filenameMatch) {
+            currentFilename = filenameMatch[1];
+        }
+    }
+
+    function resetUI() {
+        startBtn.disabled = false;
+        startBtn.innerHTML = '<i class="fas fa-play me-2"></i>Start Scraping';
+    }
+
+    // Download results
+    document.getElementById('downloadResultsBtn').addEventListener('click', function() {
+        if (currentFilename) {
+            window.open('/api/download/' + encodeURIComponent(currentFilename), '_blank');
+        }
+    });
+
+    function showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        const container = document.querySelector('.main-container');
+        container.insertBefore(alertDiv, container.firstChild);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+});
+</script>
+{% endblock %} 

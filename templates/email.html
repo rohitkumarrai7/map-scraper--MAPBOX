@@ -1,0 +1,910 @@
+{% extends "base.html" %}
+
+{% block title %}Cold Email - Google Maps Scraper{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <!-- Header Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="text-center">
+                <h1 class="display-4 fw-bold mb-3">
+                    <i class="fas fa-envelope text-success me-3"></i>
+                    Cold Email Campaign
+                </h1>
+                <p class="lead text-muted">
+                    Send personalized cold emails to your scraped business contacts
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Selection Section -->
+    <div class="row mb-4">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-database me-2"></i>
+                        Select Data Source
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if data_files %}
+                        <div class="mb-3">
+                            <label for="dataFile" class="form-label fw-bold">
+                                <i class="fas fa-file me-2"></i>
+                                Available Data Files
+                            </label>
+                            <select class="form-select" id="dataFile">
+                                <option value="">Select a data file...</option>
+                                {% for file in data_files %}
+                                    <option value="{{ file }}">{{ file }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Choose a scraped data file to use for your email campaign</div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                            <button class="btn btn-outline-primary" id="previewDataBtn">
+                                <i class="fas fa-eye me-2"></i>
+                                Preview Data
+                            </button>
+                            <button class="btn btn-outline-success" id="downloadDataBtn">
+                                <i class="fas fa-download me-2"></i>
+                                Download File
+                            </button>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            No scraped data files found. Please go to the 
+                            <a href="/" class="alert-link">Scraping page</a> 
+                            to scrape some data first.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Preview Section -->
+    <div class="row mb-4" id="dataPreviewSection" style="display: none;">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-table me-2"></i>
+                        Data Preview
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover" id="dataTable">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Business Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Address</th>
+                                    <th>Website</th>
+                                    <th>Background</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dataTableBody">
+                                <!-- Data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center mt-3">
+                        <span class="text-muted" id="dataSummary"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Campaign Section -->
+    <div class="row mb-4" id="emailCampaignSection" style="display: none;">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-paper-plane me-2"></i>
+                        Email Campaign Configuration
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form id="emailCampaignForm">
+                        <!-- Email Subject -->
+                        <div class="mb-3">
+                            <label for="emailSubject" class="form-label fw-bold">
+                                <i class="fas fa-tag me-2"></i>
+                                Email Subject
+                            </label>
+                            <input type="text" class="form-control" id="emailSubject" 
+                                   placeholder="e.g., Partnership Opportunity for [Business Name]" required>
+                            <div class="form-text">Use [Business Name] to personalize the subject line</div>
+                        </div>
+
+                        <!-- Email Type -->
+                        <div class="mb-3">
+                            <label for="emailType" class="form-label fw-bold">
+                                <i class="fas fa-tag me-2"></i>
+                                Email Type
+                            </label>
+                            <select class="form-select" id="emailType">
+                                <option value="partnership">Partnership Outreach</option>
+                                <option value="service">Service Introduction</option>
+                                <option value="collaboration">Collaboration Proposal</option>
+                                <option value="networking">Networking</option>
+                            </select>
+                            <div class="form-text">AI will generate personalized content based on this type</div>
+                        </div>
+
+                        <!-- OpenAI API Key -->
+                        <div class="mb-3">
+                            <label for="openaiApiKey" class="form-label fw-bold">
+                                <i class="fas fa-robot me-2"></i>
+                                OpenAI API Key
+                            </label>
+                            <input type="password" class="form-control" id="openaiApiKey" 
+                                   placeholder="Enter your OpenAI API key" 
+                                   value="sk............" required>
+                            <div class="form-text">
+                                Required for AI-powered email content generation
+                            </div>
+                        </div>
+
+                        <!-- Email Settings -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="senderEmail" class="form-label fw-bold">
+                                    <i class="fas fa-user me-2"></i>
+                                    Sender Email
+                                </label>
+                                <input type="email" class="form-control" id="senderEmail" 
+                                       placeholder="your-email@domain.com" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="senderName" class="form-label fw-bold">
+                                    <i class="fas fa-user-tag me-2"></i>
+                                    Sender Name
+                                </label>
+                                <input type="text" class="form-control" id="senderName" 
+                                       placeholder="Your Name" required>
+                            </div>
+                        </div>
+
+                        <!-- SMTP Settings -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="smtpEmail" class="form-label fw-bold">
+                                    <i class="fas fa-envelope me-2"></i>
+                                    SMTP Email
+                                </label>
+                                <input type="email" class="form-control" id="smtpEmail" 
+                                       value="orion.meta27@gmail.com" placeholder="smtp-email@domain.com" required>
+                                <div class="form-text">Email for SMTP authentication</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="smtpPassword" class="form-label fw-bold">
+                                    <i class="fas fa-lock me-2"></i>
+                                    SMTP Password
+                                </label>
+                                <input type="password" class="form-control" id="smtpPassword" 
+                                       value="yjretrrngkdnoijr" placeholder="App password or email password" required>
+                                <div class="form-text">Use app password for Gmail</div>
+                            </div>
+                        </div>
+
+                        <!-- Campaign Settings -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="delayBetweenEmails" class="form-label fw-bold">
+                                    <i class="fas fa-clock me-2"></i>
+                                    Delay Between Emails (seconds)
+                                </label>
+                                <input type="number" class="form-control" id="delayBetweenEmails" 
+                                       value="30" min="10" max="300">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="maxEmailsPerDay" class="form-label fw-bold">
+                                    <i class="fas fa-calendar me-2"></i>
+                                    Max Emails Per Day
+                                </label>
+                                <input type="number" class="form-control" id="maxEmailsPerDay" 
+                                       value="50" min="1" max="500">
+                            </div>
+                        </div>
+
+                        <!-- Recipient Filter -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-filter me-2"></i>
+                                Recipient Filter
+                            </label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="onlyWithEmail" checked>
+                                <label class="form-check-label" for="onlyWithEmail">
+                                    Only send to contacts with valid email addresses
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="excludeNoWebsite">
+                                <label class="form-check-label" for="excludeNoWebsite">
+                                    Exclude businesses without websites
+                                </label>
+                            </div>
+                        </div>
+
+                                                 <!-- Submit Buttons -->
+                         <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                             <button type="button" class="btn btn-outline-primary btn-lg" id="generateContentBtn">
+                                 <i class="fas fa-magic me-2"></i>
+                                 Generate & Preview Content
+                             </button>
+                             <button type="submit" class="btn btn-success btn-lg" id="startCampaignBtn" style="display: none;">
+                                 <i class="fas fa-rocket me-2"></i>
+                                 Start Auto Campaign
+                             </button>
+                         </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Campaign Progress Section -->
+    <div class="row mt-4" id="campaignProgressSection" style="display: none;">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>
+                        Campaign Progress
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold">Progress</span>
+                            <span id="campaignProgressText">0%</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" id="campaignProgressBar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h6 class="text-muted">Total Recipients</h6>
+                                <h4 id="totalRecipients" class="text-primary">0</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h6 class="text-muted">Sent</h6>
+                                <h4 id="emailsSent" class="text-success">0</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h6 class="text-muted">Failed</h6>
+                                <h4 id="emailsFailed" class="text-danger">0</h4>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h6 class="text-muted">Remaining</h6>
+                                <h4 id="emailsRemaining" class="text-warning">0</h4>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">Status:</span>
+                            <span id="campaignStatusMessage" class="status-badge status-running">
+                                <i class="fas fa-spinner fa-spin me-1"></i>
+                                Preparing campaign...
+                            </span>
+                        </div>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-3">
+                            <button class="btn btn-danger" id="stopCampaignBtn" style="display: none;">
+                                <i class="fas fa-stop me-2"></i>
+                                Stop Campaign
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+         </div>
+
+     <!-- Email Preview Section -->
+     <div class="row mt-4" id="emailPreviewSection" style="display: none;">
+         <div class="col-12">
+             <div class="card">
+                 <div class="card-header bg-info text-white">
+                     <h5 class="mb-0">
+                         <i class="fas fa-eye me-2"></i>
+                         Email Content Preview & Edit
+                     </h5>
+                 </div>
+                 <div class="card-body">
+                     <div id="emailPreviewContent">
+                         <!-- Generated email content will be displayed here -->
+                     </div>
+                     <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-3">
+                         <button class="btn btn-success btn-lg" id="startCampaignFromPreviewBtn">
+                             <i class="fas fa-rocket me-2"></i>
+                             Start Campaign with This Content
+                         </button>
+                         <button class="btn btn-outline-secondary btn-lg" id="regenerateContentBtn">
+                             <i class="fas fa-sync me-2"></i>
+                             Regenerate Content
+                         </button>
+                     </div>
+                 </div>
+             </div>
+         </div>
+     </div>
+ 
+     <!-- Template Examples Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        Email Template Examples
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <h6 class="fw-bold">Partnership Outreach</h6>
+                            <div class="border rounded p-3 bg-light">
+                                <strong>Subject:</strong> Partnership Opportunity for [Business Name]<br><br>
+                                <strong>Template:</strong><br>
+                                Hi [Business Name] team,<br><br>
+                                I came across your business and was impressed by your work in [Background]. I believe we could create a valuable partnership that would benefit both our companies.<br><br>
+                                Would you be interested in a brief call to discuss potential collaboration opportunities?<br><br>
+                                Best regards,<br>
+                                [Your Name]
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <h6 class="fw-bold">Service Introduction</h6>
+                            <div class="border rounded p-3 bg-light">
+                                <strong>Subject:</strong> How [Business Name] can grow with our services<br><br>
+                                <strong>Template:</strong><br>
+                                Dear [Business Name],<br><br>
+                                I noticed your business at [Address] and wanted to reach out about how our services could help you grow. Based on your [Background], I think we could provide significant value.<br><br>
+                                Would you be open to a 15-minute call to explore this further?<br><br>
+                                Thanks,<br>
+                                [Your Name]
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dataFileSelect = document.getElementById('dataFile');
+    const previewBtn = document.getElementById('previewDataBtn');
+    const downloadBtn = document.getElementById('downloadDataBtn');
+    const dataPreviewSection = document.getElementById('dataPreviewSection');
+    const emailCampaignSection = document.getElementById('emailCampaignSection');
+    const campaignProgressSection = document.getElementById('campaignProgressSection');
+    const emailForm = document.getElementById('emailCampaignForm');
+    const startCampaignBtn = document.getElementById('startCampaignBtn');
+    const stopCampaignBtn = document.getElementById('stopCampaignBtn');
+    
+    let currentData = [];
+    let campaignInterval;
+
+    // Preview data button
+    previewBtn.addEventListener('click', function() {
+        const selectedFile = dataFileSelect.value;
+        if (!selectedFile) {
+            showAlert('Please select a data file first', 'warning');
+            return;
+        }
+        
+        previewData(selectedFile);
+    });
+
+    // Download data button
+    downloadBtn.addEventListener('click', function() {
+        const selectedFile = dataFileSelect.value;
+        if (!selectedFile) {
+            showAlert('Please select a data file first', 'warning');
+            return;
+        }
+        
+        window.open('/api/download/' + encodeURIComponent(selectedFile), '_blank');
+    });
+
+    function previewData(filename) {
+        // Simulate loading data (in real implementation, you'd fetch from server)
+        fetch('/api/preview-data/' + encodeURIComponent(filename))
+            .then(response => response.json())
+            .then(data => {
+                currentData = data.places || data;
+                displayDataPreview(currentData);
+                dataPreviewSection.style.display = 'block';
+                emailCampaignSection.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error loading data:', error);
+                showAlert('Error loading data preview', 'danger');
+            });
+    }
+
+    function displayDataPreview(data) {
+        const tableBody = document.getElementById('dataTableBody');
+        const dataSummary = document.getElementById('dataSummary');
+        
+        // Clear existing data
+        tableBody.innerHTML = '';
+        
+        // Display first 10 records
+        const displayData = data.slice(0, 10);
+        displayData.forEach(record => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${record.title || record.name || 'N/A'}</td>
+                <td>${record.email || 'N/A'}</td>
+                <td>${record.phone || 'N/A'}</td>
+                <td>${record.address || 'N/A'}</td>
+                <td>${record.website || 'N/A'}</td>
+                <td>${record.background || 'N/A'}</td>
+            `;
+            tableBody.appendChild(row);
+        });
+        
+        // Update summary
+        const emailCount = data.filter(r => r.email && r.email !== 'N/A').length;
+        dataSummary.textContent = `Showing ${displayData.length} of ${data.length} records. ${emailCount} records have email addresses.`;
+    }
+
+    // Email campaign form submission
+    emailForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            file_path: dataFileSelect.value,
+            email_type: document.getElementById('emailType').value,
+            sender_email: document.getElementById('senderEmail').value,
+            sender_name: document.getElementById('senderName').value,
+            smtp_email: document.getElementById('smtpEmail').value,
+            smtp_password: document.getElementById('smtpPassword').value,
+            openai_api_key: document.getElementById('openaiApiKey').value,
+            delay_between_emails: parseInt(document.getElementById('delayBetweenEmails').value),
+            max_emails_per_day: parseInt(document.getElementById('maxEmailsPerDay').value),
+            only_with_email: document.getElementById('onlyWithEmail').checked,
+            exclude_no_website: document.getElementById('excludeNoWebsite').checked
+        };
+
+        // Validate form
+        if (!formData.file_path) {
+            showAlert('Please select a data file', 'warning');
+            return;
+        }
+
+        if (!formData.openai_api_key.trim()) {
+            showAlert('Please enter your OpenAI API key', 'warning');
+            return;
+        }
+
+        if (!formData.sender_email || !formData.sender_name) {
+            showAlert('Please provide sender email and name', 'warning');
+            return;
+        }
+
+        if (!formData.smtp_email || !formData.smtp_password) {
+            showAlert('Please provide SMTP credentials', 'warning');
+            return;
+        }
+
+        // Start campaign
+        startEmailCampaign(formData);
+    });
+
+    // Generate sample content button
+    document.getElementById('generateContentBtn').addEventListener('click', function() {
+        const selectedFile = dataFileSelect.value;
+        const openaiApiKey = document.getElementById('openaiApiKey').value;
+        const emailType = document.getElementById('emailType').value;
+
+        if (!selectedFile) {
+            showAlert('Please select a data file first', 'warning');
+            return;
+        }
+
+        if (!openaiApiKey.trim()) {
+            showAlert('Please enter your OpenAI API key', 'warning');
+            return;
+        }
+
+        generateAllEmailContent(selectedFile, openaiApiKey, emailType);
+    });
+
+    // Start campaign from preview button
+    document.getElementById('startCampaignFromPreviewBtn').addEventListener('click', function() {
+        // Get the edited content from the preview section
+        const editedContent = getEditedContent();
+        
+        const formData = {
+            file_path: dataFileSelect.value,
+            email_type: document.getElementById('emailType').value,
+            sender_email: document.getElementById('senderEmail').value,
+            sender_name: document.getElementById('senderName').value,
+            smtp_email: document.getElementById('smtpEmail').value,
+            smtp_password: document.getElementById('smtpPassword').value,
+            openai_api_key: document.getElementById('openaiApiKey').value,
+            delay_between_emails: parseInt(document.getElementById('delayBetweenEmails').value),
+            max_emails_per_day: parseInt(document.getElementById('maxEmailsPerDay').value),
+            only_with_email: document.getElementById('onlyWithEmail').checked,
+            exclude_no_website: document.getElementById('excludeNoWebsite').checked,
+            edited_content: editedContent
+        };
+
+        // Validate form
+        if (!formData.sender_email || !formData.sender_name) {
+            showAlert('Please provide sender email and name', 'warning');
+            return;
+        }
+
+        if (!formData.smtp_email || !formData.smtp_password) {
+            showAlert('Please provide SMTP credentials', 'warning');
+            return;
+        }
+
+        // Start campaign
+        startEmailCampaign(formData);
+    });
+
+    // Function to get edited content from preview section
+    function getEditedContent() {
+        const editedContent = [];
+        const subjects = document.querySelectorAll('.email-subject');
+        const bodies = document.querySelectorAll('.email-body');
+        
+        subjects.forEach((subject, index) => {
+            if (bodies[index]) {
+                editedContent.push({
+                    index: index,
+                    subject: subject.value,
+                    body: bodies[index].value
+                });
+            }
+        });
+        
+        return editedContent;
+    }
+
+    // Regenerate content button
+    document.getElementById('regenerateContentBtn').addEventListener('click', function() {
+        const selectedFile = dataFileSelect.value;
+        const openaiApiKey = document.getElementById('openaiApiKey').value;
+        const emailType = document.getElementById('emailType').value;
+
+        generateAllEmailContent(selectedFile, openaiApiKey, emailType);
+    });
+
+    // Stop campaign button
+    stopCampaignBtn.addEventListener('click', function() {
+        fetch('/api/stop-email-campaign', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showAlert(data.error, 'danger');
+            } else {
+                showAlert('Campaign stopped successfully', 'info');
+                resetCampaignUI();
+            }
+        })
+        .catch(error => {
+            showAlert('Error stopping campaign: ' + error.message, 'danger');
+        });
+    });
+
+    function startEmailCampaign(data) {
+        // Update UI
+        startCampaignBtn.disabled = true;
+        startCampaignBtn.innerHTML = '<span class="loading-spinner me-2"></span>Starting...';
+        campaignProgressSection.style.display = 'block';
+        stopCampaignBtn.style.display = 'block';
+        
+        // Reset progress
+        document.getElementById('campaignProgressBar').style.width = '0%';
+        document.getElementById('campaignProgressText').textContent = '0%';
+        document.getElementById('totalRecipients').textContent = '0';
+        document.getElementById('emailsSent').textContent = '0';
+        document.getElementById('emailsFailed').textContent = '0';
+        document.getElementById('emailsRemaining').textContent = '0';
+
+        // Send request
+        fetch('/api/send-cold-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showAlert(data.error, 'danger');
+                resetCampaignUI();
+            } else {
+                showAlert(data.message, 'success');
+                startCampaignStatusPolling();
+            }
+        })
+        .catch(error => {
+            showAlert('Error starting campaign: ' + error.message, 'danger');
+            resetCampaignUI();
+        });
+    }
+
+    function startCampaignStatusPolling() {
+        campaignInterval = setInterval(checkCampaignStatus, 2000);
+    }
+
+    function checkCampaignStatus() {
+        fetch('/api/email-campaign-status')
+        .then(response => response.json())
+        .then(data => {
+            updateCampaignProgress(data);
+            
+            if (!data.is_running) {
+                clearInterval(campaignInterval);
+                if (data.status_message.includes('completed')) {
+                    showAlert('Email campaign completed successfully!', 'success');
+                } else {
+                    showAlert(data.status_message, 'info');
+                }
+                resetCampaignUI();
+            }
+        })
+        .catch(error => {
+            console.error('Error checking campaign status:', error);
+        });
+    }
+
+    function generateAllEmailContent(filename, openaiApiKey, emailType) {
+        // Show loading state
+        document.getElementById('generateContentBtn').disabled = true;
+        document.getElementById('generateContentBtn').innerHTML = '<span class="loading-spinner me-2"></span>Generating...';
+        
+        // Generate content for all businesses
+        fetch('/api/generate-all-email-content', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                file_path: filename,
+                email_type: emailType,
+                openai_api_key: openaiApiKey
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                showAlert('Error generating content: ' + data.error, 'danger');
+            } else {
+                showEmailPreview(data.generated_content, data.total_businesses);
+            }
+        })
+        .catch(error => {
+            showAlert('Error generating content: ' + error.message, 'danger');
+        })
+        .finally(() => {
+            // Reset button state
+            document.getElementById('generateContentBtn').disabled = false;
+            document.getElementById('generateContentBtn').innerHTML = '<i class="fas fa-magic me-2"></i>Generate & Preview Content';
+        });
+    }
+
+    function showEmailPreview(generatedContent, totalBusinesses) {
+        const previewSection = document.getElementById('emailPreviewSection');
+        const previewContent = document.getElementById('emailPreviewContent');
+        
+        let html = `
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Generated email content for ${generatedContent.length} businesses (showing first 5 for preview). 
+                Total businesses in file: ${totalBusinesses}
+            </div>
+        `;
+        
+        generatedContent.forEach((item, index) => {
+            const business = item.business;
+            const content = item.content;
+            
+            html += `
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-building me-2"></i>
+                            ${business.title || 'Business'} (${index + 1})
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Subject:</label>
+                                <input type="text" class="form-control email-subject" value="${content.subject}" data-index="${index}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Word Count:</label>
+                                <input type="text" class="form-control" value="${content.word_count || 'N/A'} words" readonly>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <label class="form-label fw-bold">Email Body:</label>
+                            <textarea class="form-control email-body" rows="8" data-index="${index}">${content.body}</textarea>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">
+                                <strong>Business Info:</strong> ${business.address || 'N/A'} | ${business.phone || 'N/A'} | ${business.website || 'N/A'}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        previewContent.innerHTML = html;
+        previewSection.style.display = 'block';
+        
+        // Show the start campaign button
+        document.getElementById('startCampaignBtn').style.display = 'block';
+        
+        showAlert('Email content generated successfully! You can now review and start the campaign.', 'success');
+    }
+
+    function generateSampleContent(filename, openaiApiKey, emailType) {
+        // Get first business from data
+        fetch('/api/preview-data/' + encodeURIComponent(filename))
+            .then(response => response.json())
+            .then(data => {
+                const businesses = data.places || data;
+                if (businesses.length > 0) {
+                    const firstBusiness = businesses[0];
+                    
+                    // Generate content for this business
+                    fetch('/api/generate-email-content', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            business_data: firstBusiness,
+                            email_type: emailType,
+                            openai_api_key: openaiApiKey
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(content => {
+                        if (content.error) {
+                            showAlert('Error generating content: ' + content.error, 'danger');
+                        } else {
+                            showSampleContent(content, firstBusiness);
+                        }
+                    })
+                    .catch(error => {
+                        showAlert('Error generating content: ' + error.message, 'danger');
+                    });
+                }
+            })
+            .catch(error => {
+                showAlert('Error loading data: ' + error.message, 'danger');
+            });
+    }
+
+    function showSampleContent(content, business) {
+        const modal = document.createElement('div');
+        modal.className = 'modal fade';
+        modal.innerHTML = `
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Generated Email Content for ${business.title || 'Business'}</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Subject:</label>
+                            <input type="text" class="form-control" value="${content.subject}" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Email Body:</label>
+                            <textarea class="form-control" rows="10" readonly>${content.body}</textarea>
+                            <div class="form-text">Word count: ${content.word_count || 'N/A'} words</div>
+                        </div>
+                        <div class="text-muted">
+                            <small>Generated at: ${content.generated_at}</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        const modalInstance = new bootstrap.Modal(modal);
+        modalInstance.show();
+        
+        modal.addEventListener('hidden.bs.modal', function() {
+            document.body.removeChild(modal);
+        });
+    }
+
+    function updateCampaignProgress(data) {
+        document.getElementById('totalRecipients').textContent = data.total_emails || 0;
+        document.getElementById('emailsSent').textContent = data.sent_emails || 0;
+        document.getElementById('emailsFailed').textContent = data.failed_emails || 0;
+        document.getElementById('emailsRemaining').textContent = (data.total_emails || 0) - (data.sent_emails || 0) - (data.failed_emails || 0);
+        
+        // Update progress bar
+        const progress = data.current_progress || 0;
+        document.getElementById('campaignProgressBar').style.width = progress + '%';
+        document.getElementById('campaignProgressText').textContent = progress + '%';
+        
+        // Update status message
+        document.getElementById('campaignStatusMessage').innerHTML = data.status_message || 'Processing...';
+        
+        if (data.is_running) {
+            document.getElementById('campaignStatusMessage').className = 'status-badge status-running';
+        } else {
+            document.getElementById('campaignStatusMessage').className = 'status-badge status-completed';
+        }
+    }
+
+    function resetCampaignUI() {
+        startCampaignBtn.disabled = false;
+        startCampaignBtn.innerHTML = '<i class="fas fa-rocket me-2"></i>Start Auto Campaign';
+        stopCampaignBtn.style.display = 'none';
+    }
+
+    function showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        const container = document.querySelector('.main-container');
+        container.insertBefore(alertDiv, container.firstChild);
+        
+        // Auto-dismiss after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+});
+</script>
+{% endblock %} 
