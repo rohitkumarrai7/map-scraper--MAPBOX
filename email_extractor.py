@@ -325,7 +325,7 @@ def test_email_extractor():
     """Test function to verify EmailExtractor functionality"""
     
     # Replace with your actual Perplexity API key
-    API_KEY = "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"
+    API_KEY = "pplx....................."
     
     extractor = EmailExtractor(API_KEY)
     
